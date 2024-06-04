@@ -15,6 +15,10 @@
   --bg-100: #1e1e1e;
   --bg-200: #2d2d2d;
   --bg-300: #454545;
+
+  --sb-track-color: #f0c0ff;
+  --sb-thumb-color: #5e366e;
+  --sb-size: 4px;
 }
 
 @font-face {
@@ -43,4 +47,49 @@
   font-family: "Cafieg", sans-serif;
 }
 
+body {
+  --sb-track-color: #f0c0ff;
+  --sb-thumb-color: #5e366e;
+  --sb-size: 4px;
+}
 
+body::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 9px;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 9px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  body {
+    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+  }
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: var(--sb-size);
+  scroll-behavior: smooth;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 9px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 9px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  body {
+    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+  }
+}
