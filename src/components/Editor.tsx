@@ -10,7 +10,9 @@ const Editor = () => {
   const { username, photo } = location.state || { username: "", photo: "" };
   const bgImageUrl = location.state?.photo;
 
+
   const [currentStep, setCurrentStep] = useState(0);
+  
 
   const handleNext = () => {
     setCurrentStep((prevStep) => Math.min(prevStep + 1, 3));
@@ -20,6 +22,8 @@ const Editor = () => {
     setCurrentStep((prevStep) => Math.max(prevStep - 1, 0));
   };
 
+  
+
   return (
     <div>
       {bgImageUrl && (
@@ -28,12 +32,17 @@ const Editor = () => {
           style={{ backgroundImage: `url(${bgImageUrl})` }}
         ></div>
       )}
-      <div className="relative">
-        <AboutPage username={username} photo={photo} onNext={handleNext} />
-        <SocialsPage onNext={handleNext} onBack={handleBack} />
-        <SelectTech onNext={handleNext} onBack={handleBack} />
-        <SelectGif onBack={handleBack} />
-        
+      <div className="relative flex">
+        {currentStep === 0 && (
+          <AboutPage username={username} photo={photo} onNext={handleNext} />
+        )}
+        {currentStep === 1 && (
+          <SocialsPage onNext={handleNext} onBack={handleBack} />
+        )}
+        {currentStep === 2 && (
+          <SelectTech onNext={handleNext} onBack={handleBack} />
+        )}
+        {currentStep === 3 && <SelectGif onBack={handleBack} />}
       </div>
     </div>
   );
@@ -49,7 +58,7 @@ interface AboutPageProps {
 
 const AboutPage = ({ username, photo, onNext }: AboutPageProps) => {
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center">
+    <div className="min-w-full h-screen flex flex-col items-center justify-center">
       <h1 className="text-3xl Caf">Hi, I'm {username}!</h1>
       <img src={photo} alt={username} className="w-20 h-20 rounded-full mt-4" />
       <div className=" w-1/3 mt-5 ">
@@ -98,8 +107,10 @@ interface SocialsPageProps {
 
 const SocialsPage = ({ onNext, onBack }: SocialsPageProps) => {
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center">
-      <h1 className="text-3xl font-bold">Add Your Socials</h1>
+    <div className="min-w-full h-screen flex flex-col items-center justify-center">
+      <h1 className="text-3xl font-bold Caf bg-[#ffffff46] p-1 rounded-lg">
+        Add Your Socials
+      </h1>
       <div className="w-1/2 flex justify-between flex-wrap">
         {socials.map((social) => (
           <div
@@ -154,6 +165,15 @@ interface SelectTechProps {
 
 const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+
+  const handleItemClick = (label: string) => {
+    setSelectedItems((prevSelectedItems) =>
+      prevSelectedItems.includes(label)
+        ? prevSelectedItems.filter((item) => item !== label)
+        : [...prevSelectedItems, label]
+    );
+  };
 
   const filteredTechStack = TechStack.map((category) => ({
     ...category,
@@ -162,19 +182,32 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
     ),
   }));
 
+  const selectedOptions = filteredTechStack.flatMap((category) =>
+    selectedItems.length === 0
+      ? category.Options
+      : category.Options.filter((option) =>
+          selectedItems.includes(category.Title)
+        )
+  );
+
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center pb-5">
-      <h1 className="text-3xl Caf">Add Your Tech Stack</h1>
+    <div className="min-w-full h-screen flex flex-col items-center justify-center pb-5">
+      <h1 className="text-3xl Caf bg-[#ffffff46] p-1 rounded-lg">
+        Add Your Tech Stack
+      </h1>
       <div className="border-3 border-bg-100 w-[95%] rounded-xl h-[80%] mt-5 flex overflow-hidden">
-        <div className="border-r-3 border-bg-100 w-1/5 py-5 px-2 flex flex-col overflow-x-auto">
+        <div className="border-r-3 border-bg-100 w-1/5 py-5 px-2 flex flex-col overflow-x-auto custom-scroll">
           <div className="mb-2">
             <Tooltip content="Clear Selection" placement="right">
-              <button>
+              <button
+                onClick={() => setSelectedItems([])}
+                className="bg-[#ffffff46] p-1 rounded-lg"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="32"
                   height="32"
-                  fill="#000000"
+                  fill="currentColor"
                   viewBox="0 0 256 256"
                 >
                   <path d="M235.5,216.81c-22.56-11-35.5-34.58-35.5-64.8V134.73a15.94,15.94,0,0,0-10.09-14.87L165,110a8,8,0,0,1-4.48-10.34l21.32-53a28,28,0,0,0-16.1-37,28.14,28.14,0,0,0-35.82,16,.61.61,0,0,0,0,.12L108.9,79a8,8,0,0,1-10.37,4.49L73.11,73.14A15.89,15.89,0,0,0,55.74,76.8C34.68,98.45,24,123.75,24,152a111.45,111.45,0,0,0,31.18,77.53A8,8,0,0,0,61,232H232a8,8,0,0,0,3.5-15.19ZM67.14,88l25.41,10.3a24,24,0,0,0,31.23-13.45l21-53c2.56-6.11,9.47-9.27,15.43-7a12,12,0,0,1,6.88,15.92L145.69,93.76a24,24,0,0,0,13.43,31.14L184,134.73V152c0,.33,0,.66,0,1L55.77,101.71A108.84,108.84,0,0,1,67.14,88Zm48,128a87.53,87.53,0,0,1-24.34-42,8,8,0,0,0-15.49,4,105.16,105.16,0,0,0,18.36,38H64.44A95.54,95.54,0,0,1,40,152a85.9,85.9,0,0,1,7.73-36.29l137.8,55.12c3,18,10.56,33.48,21.89,45.16Z"></path>
@@ -183,11 +216,16 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
             </Tooltip>
           </div>
           {TechStack.map((tech) => (
-            <SelectableItem key={tech.Title} label={tech.Title} />
+            <SelectableItem
+              key={tech.Title}
+              label={tech.Title}
+              isSelected={selectedItems.includes(tech.Title)}
+              onClick={() => handleItemClick(tech.Title)}
+            />
           ))}
         </div>
         <div className="flex flex-col w-full">
-          <div className="p-5 border-b-3 border-b-bg-100 flex items-center">
+          <div className="p-5 border-b-3 border-b-bg-100 flex items-center bg-[#ffffff46]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="32"
@@ -208,8 +246,8 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
           </div>
           <div className="p-5 flex flex-wrap gap-2 overflow-x-auto custom-scroll">
             <div className="flex items-center w-full flex-wrap gap-2 justify-center">
-              {filteredTechStack.map((tech, index) =>
-                tech.Options.map((option) => (
+              {selectedOptions.length > 0 ? (
+                selectedOptions.map((option, index) => (
                   <TechCard
                     key={`${option.title}-${index}`}
                     imgSrc={option.logo}
@@ -217,6 +255,26 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
                     techName={option.title}
                   />
                 ))
+              ) : (
+                <div className="flex flex-col items-center bg-[#ffffff46] p-3 rounded-lg font-Mont">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="102"
+                    height="102"
+                    fill="#000000"
+                    viewBox="0 0 256 256"
+                  >
+                    <path d="M176,140a12,12,0,1,1-12-12A12,12,0,0,1,176,140ZM128,92a12,12,0,1,0-12,12A12,12,0,0,0,128,92Zm73-38A104,104,0,0,0,50.48,197.33,8,8,0,1,0,62.4,186.66a88,88,0,1,1,131.19,0,8,8,0,0,0,11.93,10.67A104,104,0,0,0,201,54ZM152,168H136c-21.74,0-48-17.84-48-40a41.33,41.33,0,0,1,.55-6.68,8,8,0,1,0-15.78-2.64A56.9,56.9,0,0,0,72,128c0,14.88,7.46,29.13,21,40.15C105.4,178.22,121.07,184,136,184h16a8,8,0,0,1,0,16H96a24,24,0,0,0,0,48,8,8,0,0,0,0-16,8,8,0,0,1,0-16h56a24,24,0,0,0,0-48Z"></path>
+                  </svg>
+                  <p>It looks like we don't have that yet.</p>
+                  <p>Care to give a feedback?</p>
+                  <button
+                    onClick={() => alert("Feedback button clicked")}
+                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+                  >
+                    Give Feedback
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -244,16 +302,16 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
 
 interface SelectableItemProps {
   label: string;
+  isSelected: boolean;
+  onClick: () => void;
 }
 
-function SelectableItem({ label }: SelectableItemProps) {
-  const [isSelected, setIsSelected] = useState(false);
-
+function SelectableItem({ label, isSelected, onClick }: SelectableItemProps) {
   return (
     <span
-      onClick={() => setIsSelected(!isSelected)}
-      className={`border-2 border-accent-200 hover:bg-accent-200 active:bg-primary-300 ${
-        isSelected ? "bg-accent-200" : ""
+      onClick={onClick}
+      className={`border-2 border-accent-200 hover:bg-accent-200 active:bg-primary-300  ${
+        isSelected ? "bg-accent-200" : "bg-[#ffffff46]"
       } p-2 rounded-lg mb-2`}
     >
       {label}
@@ -267,8 +325,8 @@ interface SelectGifProps {
 
 const SelectGif = ({ onBack }: SelectGifProps) => {
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center">
-      <h1 className="text-3xl Caf">
+    <div className="min-w-full h-screen flex flex-col items-center justify-center">
+      <h1 className="text-3xl Caf bg-[#ffffff46] p-1 rounded-lg">
         A Gify a day, makes a developer... <br /> procrastinate in a delightful
         way.
       </h1>
