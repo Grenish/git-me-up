@@ -1,5 +1,5 @@
 # Git Me Up
-### DEVELOPMENT
+#### DEVELOPMENT
 
 Git Me Up is an innovative online tool designed to help you craft stunning and professional README files for your GitHub profile. Whether you are a seasoned developer or just starting out, Git Me Up simplifies the process of creating engaging and polished documentation that showcases your projects and skills. With a user-friendly interface, Git Me Up ensures that your GitHub profile stands out, leaving a lasting impression on your audience.
 
