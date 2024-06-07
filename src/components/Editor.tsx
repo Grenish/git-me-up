@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import { Textarea, Tooltip } from "@nextui-org/react";
 import { Kbd } from "@nextui-org/react";
 import { TechStack, socials } from "../utils";
-import { useState } from "react";
+import React, { useState } from "react";
 import TechCard from "./TechCard";
 
 const Editor = () => {
@@ -10,9 +10,12 @@ const Editor = () => {
   const { username, photo } = location.state || { username: "", photo: "" };
   const bgImageUrl = location.state?.photo;
 
-
   const [currentStep, setCurrentStep] = useState(0);
-  
+  const [aboutText, setAboutText] = useState("");
+  const [socialsText, setSocialsText] = useState("");
+  const [selectedTech, setSelectedTech] = React.useState<string[]>([]);
+
+  const FinalData = [aboutText, socialsText, selectedTech];
 
   const handleNext = () => {
     setCurrentStep((prevStep) => Math.min(prevStep + 1, 3));
@@ -21,8 +24,6 @@ const Editor = () => {
   const handleBack = () => {
     setCurrentStep((prevStep) => Math.max(prevStep - 1, 0));
   };
-
-  
 
   return (
     <div>
@@ -34,16 +35,30 @@ const Editor = () => {
       )}
       <div className="relative flex">
         {currentStep === 0 && (
-          <AboutPage username={username} photo={photo} onNext={handleNext} />
+          <AboutPage
+            username={username}
+            photo={photo}
+            onNext={handleNext}
+            setAboutText={setAboutText}
+          />
         )}
         {currentStep === 1 && (
-          <SocialsPage onNext={handleNext} onBack={handleBack} />
+          <SocialsPage
+            onNext={handleNext}
+            onBack={handleBack}
+            setSocialsText={setSocialsText}
+          />
         )}
         {currentStep === 2 && (
-          <SelectTech onNext={handleNext} onBack={handleBack} />
+          <SelectTech
+            onNext={handleNext}
+            onBack={handleBack}
+            setSelectedTech={setSelectedTech}
+          />
         )}
         {currentStep === 3 && <SelectGif onBack={handleBack} />}
       </div>
+      <button onClick={() => console.log(FinalData)}>See</button>
     </div>
   );
 };
@@ -54,9 +69,15 @@ interface AboutPageProps {
   username: string;
   photo: string;
   onNext: () => void;
+  setAboutText: (text: string) => void;
 }
 
-const AboutPage = ({ username, photo, onNext }: AboutPageProps) => {
+const AboutPage = ({
+  username,
+  photo,
+  onNext,
+  setAboutText,
+}: AboutPageProps) => {
   return (
     <div className="min-w-full h-screen flex flex-col items-center justify-center">
       <h1 className="text-3xl Caf">Hi, I'm {username}!</h1>
@@ -65,6 +86,10 @@ const AboutPage = ({ username, photo, onNext }: AboutPageProps) => {
         <Textarea
           placeholder="A little about myself"
           className="w-full font-Mont text-sm outline-none"
+          onChange={(e) => {
+            setAboutText(e.target.value);
+            console.log(e.target.value);
+          }}
         />
         <div className="flex justify-end items-center mt-2">
           <Tooltip
@@ -103,9 +128,10 @@ const AboutPage = ({ username, photo, onNext }: AboutPageProps) => {
 interface SocialsPageProps {
   onNext: () => void;
   onBack: () => void;
+  setSocialsText: (name: string, value: string) => void;
 }
 
-const SocialsPage = ({ onNext, onBack }: SocialsPageProps) => {
+const SocialsPage = ({ onNext, onBack, setSocialsText }: SocialsPageProps) => {
   return (
     <div className="min-w-full h-screen flex flex-col items-center justify-center">
       <h1 className="text-3xl font-bold Caf bg-[#ffffff46] p-1 rounded-lg">
@@ -127,6 +153,7 @@ const SocialsPage = ({ onNext, onBack }: SocialsPageProps) => {
                 className="bg-transparent outline-none w-full text-gray-700 text-2xl px-2 py-1"
                 placeholder={`${social.name} username`}
                 aria-label={`${social.name} username`}
+                onChange={(e) => setSocialsText(social.name, e.target.value)}
               />
               <span className="p-0.5 bg-accent-100"></span>
             </div>
@@ -161,9 +188,10 @@ const SocialsPage = ({ onNext, onBack }: SocialsPageProps) => {
 interface SelectTechProps {
   onNext: () => void;
   onBack: () => void;
+  setSelectedTech: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
+const SelectTech = ({ onNext, onBack, setSelectedTech }: SelectTechProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
@@ -185,9 +213,7 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
   const selectedOptions = filteredTechStack.flatMap((category) =>
     selectedItems.length === 0
       ? category.Options
-      : category.Options.filter((option) =>
-          selectedItems.includes(category.Title)
-        )
+      : category.Options.filter(() => selectedItems.includes(category.Title))
   );
 
   return (
@@ -200,7 +226,10 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
           <div className="mb-2">
             <Tooltip content="Clear Selection" placement="right">
               <button
-                onClick={() => setSelectedItems([])}
+                onClick={() => {
+                  setSelectedItems([]);
+                  setSelectedTech([]);
+                }}
                 className="bg-[#ffffff46] p-1 rounded-lg"
               >
                 <svg
@@ -215,6 +244,7 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
               </button>
             </Tooltip>
           </div>
+          {/* Filtering the categories */}
           {TechStack.map((tech) => (
             <SelectableItem
               key={tech.Title}
@@ -253,7 +283,7 @@ const SelectTech = ({ onNext, onBack }: SelectTechProps) => {
                     imgSrc={option.logo}
                     altText={option.title}
                     techName={option.title}
-                  />
+                    />
                 ))
               ) : (
                 <div className="flex flex-col items-center bg-[#ffffff46] p-3 rounded-lg font-Mont">
@@ -330,7 +360,7 @@ const SelectGif = ({ onBack }: SelectGifProps) => {
         A Gify a day, makes a developer... <br /> procrastinate in a delightful
         way.
       </h1>
-      <div className="flex items-center mt-10">
+      <div className="flex items-center w-1/2 mt-10">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="32"
@@ -338,14 +368,30 @@ const SelectGif = ({ onBack }: SelectGifProps) => {
           fill="#000000"
           viewBox="0 0 256 256"
         >
-          <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+          <path d="M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z"></path>
         </svg>
         <input
           type="text"
           name="Search"
-          placeholder="Search GIFs"
+          placeholder="Add a link to GIFs"
           className="bg-transparent outline-none w-full text-bg-50 text-2xl font-Mont px-2 py-1 border-b-2 ml-2 border-b-bg-100"
         />
+        <Tooltip
+          content="Go to any GIFs website and click share to copy the link"
+          className="font-Mont"
+        >
+          <span className="cursor-pointer">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              fill="#000000"
+              viewBox="0 0 256 256"
+            >
+              <path d="M225.86,102.82c-3.77-3.94-7.67-8-9.14-11.57-1.36-3.27-1.44-8.69-1.52-13.94-.15-9.76-.31-20.82-8-28.51s-18.75-7.85-28.51-8c-5.25-.08-10.67-.16-13.94-1.52-3.56-1.47-7.63-5.37-11.57-9.14C146.28,23.51,138.44,16,128,16s-18.27,7.51-25.18,14.14c-3.94,3.77-8,7.67-11.57,9.14C88,40.64,82.56,40.72,77.31,40.8c-9.76.15-20.82.31-28.51,8S41,67.55,40.8,77.31c-.08,5.25-.16,10.67-1.52,13.94-1.47,3.56-5.37,7.63-9.14,11.57C23.51,109.72,16,117.56,16,128s7.51,18.27,14.14,25.18c3.77,3.94,7.67,8,9.14,11.57,1.36,3.27,1.44,8.69,1.52,13.94.15,9.76.31,20.82,8,28.51s18.75,7.85,28.51,8c5.25.08,10.67.16,13.94,1.52,3.56,1.47,7.63,5.37,11.57,9.14C109.72,232.49,117.56,240,128,240s18.27-7.51,25.18-14.14c3.94-3.77,8-7.67,11.57-9.14,3.27-1.36,8.69-1.44,13.94-1.52,9.76-.15,20.82-.31,28.51-8s7.85-18.75,8-28.51c.08-5.25.16-10.67,1.52-13.94,1.47-3.56,5.37-7.63,9.14-11.57C232.49,146.28,240,138.44,240,128S232.49,109.73,225.86,102.82Zm-11.55,39.29c-4.79,5-9.75,10.17-12.38,16.52-2.52,6.1-2.63,13.07-2.73,19.82-.1,7-.21,14.33-3.32,17.43s-10.39,3.22-17.43,3.32c-6.75.1-13.72.21-19.82,2.73-6.35,2.63-11.52,7.59-16.52,12.38S132,224,128,224s-9.15-4.92-14.11-9.69-10.17-9.75-16.52-12.38c-6.1-2.52-13.07-2.63-19.82-2.73-7-.1-14.33-.21-17.43-3.32s-3.22-10.39-3.32-17.43c-.1-6.75-.21-13.72-2.73-19.82-2.63-6.35-7.59-11.52-12.38-16.52S32,132,32,128s4.92-9.15,9.69-14.11,9.75-10.17,12.38-16.52c2.52-6.1,2.63-13.07,2.73-19.82.1-7,.21-14.33,3.32-17.43S70.51,56.9,77.55,56.8c6.75-.1,13.72-.21,19.82-2.73,6.35-2.63,11.52-7.59,16.52-12.38S124,32,128,32s9.15,4.92,14.11,9.69,10.17,9.75,16.52,12.38c6.1,2.52,13.07,2.63,19.82,2.73,7,.1,14.33.21,17.43,3.32s3.22,10.39,3.32,17.43c.1,6.75.21,13.72,2.73,19.82,2.63,6.35,7.59,11.52,12.38,16.52S224,124,224,128,219.08,137.15,214.31,142.11ZM140,180a12,12,0,1,1-12-12A12,12,0,0,1,140,180Zm28-72c0,17.38-13.76,31.93-32,35.28V144a8,8,0,0,1-16,0v-8a8,8,0,0,1,8-8c13.23,0,24-9,24-20s-10.77-20-24-20-24,9-24,20v4a8,8,0,0,1-16,0v-4c0-19.85,17.94-36,40-36S168,88.15,168,108Z"></path>
+            </svg>
+          </span>
+        </Tooltip>
       </div>
       <div className="w-[80%] p-5 border-2 border-bg-50 rounded-xl mt-5"></div>
       <div className="w-1/2 mt-10 flex">
