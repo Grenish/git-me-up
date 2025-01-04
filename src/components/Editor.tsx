@@ -194,6 +194,7 @@ interface SelectTechProps {
 const SelectTech = ({ onNext, onBack, setSelectedTech }: SelectTechProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
   const handleItemClick = (label: string) => {
     setSelectedItems((prevSelectedItems) =>
@@ -215,6 +216,18 @@ const SelectTech = ({ onNext, onBack, setSelectedTech }: SelectTechProps) => {
       ? category.Options
       : category.Options.filter(() => selectedItems.includes(category.Title))
   );
+
+  const handleCheckboxChange = (label: string) => {
+    setCheckedItems((prevItems) => {
+      if (prevItems.includes(label)) {
+        console.log(`TechCard unchecked: ${label}`);
+        return prevItems.filter((item) => item !== label);
+      } else {
+        console.log(`TechCard checked: ${label}`);
+        return [...prevItems, label];
+      }
+    });
+  };
 
   return (
     <div className="min-w-full h-screen flex flex-col items-center justify-center pb-5">
@@ -283,7 +296,9 @@ const SelectTech = ({ onNext, onBack, setSelectedTech }: SelectTechProps) => {
                     imgSrc={option.logo}
                     altText={option.title}
                     techName={option.title}
-                    />
+                    checked={checkedItems.includes(option.title)}
+                    onClick={() => handleCheckboxChange(option.title)}
+                  />
                 ))
               ) : (
                 <div className="flex flex-col items-center bg-[#ffffff46] p-3 rounded-lg font-Mont">

@@ -1,18 +1,43 @@
-import { useState } from "react";
+import React, { useState } from "react";
+
+const Development = () => {
+
+  const handleCheckboxChange = (label: string) => {
+    console.log(label);
+  };
+  return (
+    <div>
+      <TechCard
+        key={`${option.title}-${index}`}
+        imgSrc={option.logo}
+        altText={option.title}
+        techName={option.title}
+        onClick={() => handleCheckboxChange(option.title)}
+      />
+    </div>
+  );
+};
+
+export default Development;
 
 interface TechCardProps {
   imgSrc: string;
   altText: string;
   techName: string;
-  onClick: () => void;
+  onClick: boolean;
 }
 
-const TechCard: React.FC<TechCardProps> = ({ imgSrc, altText, techName, onClick }) => {
-  const [isTechSelected, setIsTechSelected] = useState(false);
+const TechCard: React.FC<TechCardProps> = ({
+  imgSrc,
+  altText,
+  techName,
+  onClick,
+}) => {
+  const [isTechSelected, setIsTechSelected] = useState(onClick);
 
   const handleCheckboxChange = () => {
     setIsTechSelected(!isTechSelected);
-    onClick();
+    console.log(isTechSelected ? "Unchecked" : "Checked");
   };
 
   return (
@@ -57,5 +82,3 @@ const TechCard: React.FC<TechCardProps> = ({ imgSrc, altText, techName, onClick 
     </div>
   );
 };
-
-export default TechCard;
