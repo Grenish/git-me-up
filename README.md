@@ -1,20 +1,36 @@
-# Git Me Up
-#### DEVELOPMENT
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Git Me Up is an innovative online tool designed to help you craft stunning and professional README files for your GitHub profile. Whether you are a seasoned developer or just starting out, Git Me Up simplifies the process of creating engaging and polished documentation that showcases your projects and skills. With a user-friendly interface, Git Me Up ensures that your GitHub profile stands out, leaving a lasting impression on your audience.
+## Getting Started
 
-![GitMeUp](https://github.com/Grenish/git-me-up/assets/107925840/4600ea03-fb8a-4692-a6e0-b6e1b8bed2c0)
+First, run the development server:
 
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-### Features Include
-- Tech Stack Search
-- GIF's Integration
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Plans
-- AI integration for the about section
-- GIF's API integration
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Learn More
 
-> ## For the Developers, By the Developers
-> <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHk4MzNjb2Fic2xnb3FydHIxeGp0YzJmMDhveGI3dnVsdm50bXBoOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l3q2zbskZp2j8wniE/giphy-downsized-large.gif">
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
