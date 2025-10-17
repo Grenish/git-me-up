@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   style: "normal",
@@ -33,6 +34,7 @@ export default function RootLayout({
             <ModeToggle />
           </div>
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
