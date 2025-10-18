@@ -13,12 +13,20 @@ interface SocialHandles {
   twitch: string;
 }
 
+interface StatsConfig {
+  font: "montserrat" | "doto";
+  theme: "dark" | "light";
+  includeStats: boolean;
+  includeStreak: boolean;
+}
+
 interface GenerateMarkdownOptions {
   user: GitHubUser | null;
   headerImage: string | null;
   textareaValue: string;
   socialHandles: SocialHandles;
   selectedTech: string[];
+  statsConfig?: StatsConfig;
 }
 
 export function generateMarkdown({
@@ -27,6 +35,7 @@ export function generateMarkdown({
   textareaValue,
   socialHandles,
   selectedTech,
+  statsConfig,
 }: GenerateMarkdownOptions): string {
   let markdown = "";
 
@@ -109,12 +118,30 @@ export function generateMarkdown({
     markdown += `</p>\n\n`;
   }
 
-  // Add GitHub stats
-  if (user) {
+  // Add GitHub stats based on configuration
+  if (
+    user &&
+    statsConfig &&
+    (statsConfig.includeStats || statsConfig.includeStreak)
+  ) {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_URL || "https://git-me-up.vercel.app";
+    const theme = statsConfig.theme || "dark";
+    const font = statsConfig.font || "montserrat";
+
     markdown += `## 📊 GitHub Stats\n\n`;
     markdown += `<div align="center">\n\n`;
-    markdown += `![GitHub Stats](https://github-readme-stats.vercel.app/api?username=${user.login}&show_icons=true&theme=radical&hide_border=true&bg_color=0D1117)\n\n`;
-    markdown += `![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=${user.login}&theme=radical&hide_border=true&background=0D1117)\n\n`;
+
+    if (statsConfig.includeStats) {
+      const statsUrl = `${baseUrl}/api/github/stats?username=${user.login}&theme=${theme}&type=stats&font=${font}`;
+      markdown += `![GitHub Stats](${statsUrl})\n\n`;
+    }
+
+    if (statsConfig.includeStreak) {
+      const streakUrl = `${baseUrl}/api/github/stats?username=${user.login}&theme=${theme}&type=streak&font=${font}`;
+      markdown += `![GitHub Streak](${streakUrl})\n\n`;
+    }
+
     markdown += `</div>\n\n`;
   }
 
