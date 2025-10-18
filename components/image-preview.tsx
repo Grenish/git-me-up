@@ -95,7 +95,6 @@ export default function ImagePreview({
       new URL(imageUrl);
       onImageSelect(imageUrl);
       onOpenChange(false);
-      toast.success("Image URL added successfully!");
     } catch {
       toast.error("Please enter a valid URL");
     }
@@ -109,7 +108,6 @@ export default function ImagePreview({
 
     onImageSelect(uploadedImage, uploadedFile || undefined);
     onOpenChange(false);
-    toast.success("Image uploaded successfully!");
   };
 
   const clearUploadedImage = () => {
