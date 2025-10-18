@@ -84,17 +84,17 @@ export default function Home() {
               {isLoading ? <Spinner /> : <ArrowRight />}
             </Button>
           </div>
-          <Label htmlFor="name" className="text-sm font-medium ml-0.5">
+          <p className="text-sm text-center font-medium ml-0.5">
             {name ? (
               <>
-                Hello {name}, press <Kbd>Enter</Kbd> to continue...
+                Hello {name}, <br /> press <Kbd>Enter</Kbd> to continue...
               </>
             ) : (
               <>
                 <Kbd>Enter</Kbd> to continue
               </>
             )}
-          </Label>
+          </p>
         </div>
       </div>
     </div>
