@@ -14,10 +14,12 @@ import {
   Step3Socials,
   Step4HeaderImage,
   Step5TechStack,
-  Step6Preview,
+  Step6StatsConfig,
+  Step7Preview,
   generateMarkdown,
   defaultSocialHandles,
   type SocialHandles,
+  type StatsConfig,
 } from "@/components/create";
 
 const TEMPLATES = [
@@ -43,6 +45,12 @@ export default function GetStartedPage() {
     useState<SocialHandles>(defaultSocialHandles);
   const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [selectedTech, setSelectedTech] = useState<string[]>([]);
+  const [statsConfig, setStatsConfig] = useState<StatsConfig>({
+    font: "montserrat",
+    theme: "dark",
+    includeStats: true,
+    includeStreak: true,
+  });
 
   // UI states
   const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0);
@@ -161,7 +169,7 @@ export default function GetStartedPage() {
   };
 
   const goToNext = () => {
-    if (currentStep < 6) {
+    if (currentStep < 7) {
       setDirection(1);
       setCurrentStep(currentStep + 1);
     }
@@ -181,6 +189,7 @@ export default function GetStartedPage() {
       textareaValue,
       socialHandles,
       selectedTech,
+      statsConfig,
     });
     navigator.clipboard.writeText(markdown);
     toast.success("Markdown copied to clipboard!");
@@ -191,6 +200,12 @@ export default function GetStartedPage() {
     setSocialHandles(defaultSocialHandles);
     setHeaderImage(null);
     setSelectedTech([]);
+    setStatsConfig({
+      font: "montserrat",
+      theme: "dark",
+      includeStats: true,
+      includeStreak: true,
+    });
     setCurrentStep(1);
     setDirection(-1);
     toast.info("Reset complete!");
@@ -361,13 +376,35 @@ export default function GetStartedPage() {
               transition={transition}
               className="flex w-full flex-col items-center justify-center absolute"
             >
-              <Step6Preview
+              <Step6StatsConfig
+                username={user.login}
+                statsConfig={statsConfig}
+                onStatsConfigChange={setStatsConfig}
+                onPrev={goToPrev}
+                onNext={goToNext}
+              />
+            </motion.div>
+          )}
+
+          {currentStep === 7 && (
+            <motion.div
+              key="step7"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={transition}
+              className="flex w-full flex-col items-center justify-center absolute"
+            >
+              <Step7Preview
                 markdown={generateMarkdown({
                   user,
                   headerImage,
                   textareaValue,
                   socialHandles,
                   selectedTech,
+                  statsConfig,
                 })}
                 onPrev={goToPrev}
                 onReset={handleReset}

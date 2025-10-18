@@ -9,19 +9,19 @@ import {
 import { ArrowLeft, RotateCcwIcon, Clipboard } from "lucide-react";
 import MarkdownIt from "@/components/markdown-it";
 
-interface Step6PreviewProps {
+interface Step7PreviewProps {
   markdown: string;
   onPrev: () => void;
   onReset: () => void;
   onCopyMarkdown: () => void;
 }
 
-export function Step6Preview({
+export function Step7Preview({
   markdown,
   onPrev,
   onReset,
   onCopyMarkdown,
-}: Step6PreviewProps) {
+}: Step7PreviewProps) {
   return (
     <div className="flex w-full flex-col items-center justify-center">
       <div className="w-11/12 md:w-1/2 flex items-center justify-between">
