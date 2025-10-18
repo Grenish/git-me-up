@@ -1,98 +1,112 @@
 # Git Me Up
 
-**git-me-up** is a specialized tool designed to help developers create an engaging and professional GitHub profile README quickly and efficiently. It combines the power of modern AI and dynamic data visualization to generate compelling bios and elegant, real-time GitHub statistics cards.
+**Git Me Up** is a modern, minimal, and professional GitHub profile `README` generator. It’s designed to make your profile stand out without unnecessary clutter—updated, aesthetic, and tailored for developers who value simplicity and functionality.
 
-## ✨ What It Is & What It Does
+---
 
-**git-me-up** solves the challenge of crafting the perfect GitHub README. It is a full-stack application built with **Next.js**, focused on **developer productivity** and **profile polish**.
+## Why Git Me Up
 
-### Key Features
+Unlike other generic GitHub README generators, **Git Me Up** emphasizes:
 
-  * **AI-Powered Bio Generation:** Leverage the Gemini API to instantly generate a professional and engaging personal biography based on your GitHub profile and provided context.
-  * **Dynamic GitHub Stats Cards:** Generate clean, customizable SVG images displaying your key GitHub metrics (stars, repositories, contribution streaks) in real-time.
-  * **Tech Stack Icons Library:** Access a massive collection of high-quality, normalized SVG icons for virtually every technology to display in your README.
-  * **Customization:** Choose between dark and light themes, and different font styles for your stats cards to perfectly match your README's aesthetic.
-  * **API-First Design:** Easily integrate the bio generation, dynamic stats, and tech icons into your existing workflow or website using the dedicated API endpoints.
+* **Modern and Minimal Design:** Clean, professional output without unnecessary fluff.
+* **AI-Powered Bio Generation:** Create personalized, engaging bios effortlessly.
+* **Dynamic GitHub Stats:** Real-time, visually appealing metrics for your profile.
+* **Extensive Tech Icons Library:** Showcase your tech stack with high-quality SVG icons.
+* **Customizable Themes:** Dark/light mode and multiple fonts for a cohesive look.
+* **API-First Approach:** Integrate directly into your workflow or projects.
 
-## 💻 Tech Stack
+---
 
-  * **Framework:** Next.js (App Router)
-  * **Language:** TypeScript
-  * **AI Model:** Google Gemini Flash (via `@ai-sdk/google`)
-  * **Dynamic SVG Generation:** [Satori](https://github.com/vercel/satori)
-  * **Data Source:** GitHub API
+## Key Features
 
------
+* **AI Bio Generation:** Uses Google Gemini to generate professional bios from your GitHub profile.
+* **Dynamic GitHub Stats Cards:** Generate live SVG cards displaying stars, repos, contributions, and streaks.
+* **Tech Stack Icons:** Access over 300 normalized SVG icons for popular languages, frameworks, and tools.
+* **Customization:** Easily adjust themes, fonts, and card types to match your profile aesthetic.
+* **API-Ready:** Fully accessible API for embedding all features in your projects or applications.
 
-# 🚀 Comprehensive API Documentation
+---
 
-**git-me-up** exposes three primary API interfaces for integrating its core functionality.
+## Tech Stack
 
-## 1\. AI Bio Generation API
+* **Framework:** Next.js 15 (App Router)
+* **Language:** TypeScript
+* **AI Model:** Google Gemini Flash (`@ai-sdk/google`)
+* **Dynamic SVG Generation:** [Satori](https://github.com/vercel/satori)
+* **Data Source:** GitHub API
 
-This endpoint utilizes the **Gemini** model to generate a professional biography based on a provided GitHub URL.
+---
 
-| Method | URL | Description |
-| :--- | :--- | :--- |
-| **`POST`** | `/api/generate` | Generates a professional bio from a GitHub profile. |
+## API Documentation
 
-### Request Body (JSON)
+### 1. AI Bio Generation API
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| **`githubUrl`** | `string` | **Yes** | The full URL of the GitHub profile to analyze. |
+Generate a professional bio from a GitHub profile.
 
------
+**Endpoint:**
 
-## 2\. Dynamic GitHub Stats Card API
-
-This endpoint generates a customized, dynamic **SVG image** displaying key GitHub statistics or contribution streaks.
-
-| Method | URL | Description |
-| :--- | :--- | :--- |
-| **`GET`** | `/api/github/stats` | Generates a dynamic GitHub stats or streak SVG card. |
-
-### Query Parameters
-
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| **`username`** | `string` | **Yes** | The GitHub username to display stats for. |
-| **`type`** | `string` | No | `stats` | The type of card to generate: **`stats`** (Total Stars, Public Repos) or **`streak`** (Current/Longest Streak, Total Contributions). |
-| **`theme`** | `string` | No | `dark` | The visual theme: **`dark`** or **`light`**. |
-| **`font`** | `string` | No | `montserrat` | The font to use for text: **`montserrat`** or **`doto`**. |
-
------
-
-## 3\. Tech Stack Icons API
-
-This interface provides direct public access to the repository's collection of over 100 technology icons, which can be easily embedded in any Markdown file.
-
-| Method | URL | Description |
-| :--- | :--- | :--- |
-| **`GET`** | `/<icon-name>.svg` (Proxied via `/svg/`) | Directly serves the raw **SVG image** for the requested technology icon. |
-
-### Usage
-
-Since the icons are stored as public assets under the `public/svg` directory, they are accessible at the root of your domain under the `/svg/` path.
-
-To use an icon, simply construct an image URL pointing to the asset:
-
-```markdown
-<img src="https://<your-domain>/svg/React.svg" alt="React" width="40" height="40"/>
-
-<img src="https://<your-domain>/svg/Tailwind-CSS.svg" alt="Tailwind CSS" width="40" height="40"/>
-
-<img src="https://<your-domain>/svg/Next.js.svg" alt="Next.js" width="40" height="40"/>
+```
+POST /api/generate
 ```
 
-### Available Icons (Examples)
+**Request Body (JSON):**
 
-The collection includes a wide range of technologies, such as:
+| Parameter   | Type   | Required | Description                     |
+| ----------- | ------ | -------- | ------------------------------- |
+| `githubUrl` | string | Yes      | Full URL of the GitHub profile. |
 
-  * **Languages:** `JavaScript.svg`, `TypeScript.svg`, `Python.svg`, `CPlusPlus.svg`, `Go.svg`, `Rust.svg`
-  * **Frameworks/Libraries:** `React.svg`, `Next.js.svg`, `Vue.js.svg`, `Angular.svg`, `Express.svg`
-  * **Databases:** `MongoDB.svg`, `PostgresSQL.svg`, `MySQL.svg`
-  * **Tools & Platforms:** `Docker.svg`, `Kubernetes.svg`, `Vercel.svg`, `Figma.svg`
-  * **Styling:** `Tailwind-CSS.svg`, `Sass.svg`
+---
 
------
+### 2. Dynamic GitHub Stats Card API
+
+Generate a customizable, real-time SVG card for your GitHub stats or streaks.
+
+**Endpoint:**
+
+```
+GET /api/github/stats
+```
+
+**Query Parameters:**
+
+| Parameter  | Type   | Required | Default      | Description                                                 |
+| ---------- | ------ | -------- | ------------ | ----------------------------------------------------------- |
+| `username` | string | Yes      | —            | GitHub username to display stats for.                       |
+| `type`     | string | No       | `stats`      | Card type: `stats` (Total Stars, Public Repos) or `streak`. |
+| `theme`    | string | No       | `dark`       | Visual theme: `dark` or `light`.                            |
+| `font`     | string | No       | `montserrat` | Font style: `montserrat` or `doto`.                         |
+
+---
+
+### 3. Tech Stack Icons API
+
+Direct access to SVG icons for over 300 technologies.
+
+**Endpoint:**
+
+```
+GET /<icon-name>.svg  (Proxied via /svg/)
+```
+
+**Usage Example:**
+
+```markdown
+<img src="https://git-me-up.vercel.app/svg/React.svg" alt="React" width="40" height="40"/>
+<img src="https://git-me-up.vercel.app/svg/Tailwind-CSS.svg" alt="Tailwind CSS" width="40" height="40"/>
+<img src="https://git-me-up.vercel.app/svg/Next.js.svg" alt="Next.js" width="40" height="40"/>
+```
+
+**Available Icons (Examples):**
+
+* **Languages:** JavaScript, TypeScript, Python, C++, Go, Rust
+* **Frameworks/Libraries:** React, Next.js, Vue.js, Angular, Express
+* **Databases:** MongoDB, PostgreSQL, MySQL
+* **Tools & Platforms:** Docker, Kubernetes, Vercel, Figma
+* **Styling:** Tailwind CSS, Sass
+
+---
+
+## Roadmap
+
+* Expand GitHub stats SVG variations.
+* Redesign and enhance existing cards for better aesthetics.
