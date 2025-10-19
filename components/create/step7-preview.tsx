@@ -57,7 +57,7 @@ export function Step7Preview({
         </div>
       </div>
 
-      <div className="w-11/12 md:w-1/2 mt-2 h-[900px] overflow-y-auto">
+      <div className="w-11/12 md:w-4xl mt-2 h-[900px] overflow-y-auto">
         <MarkdownIt>{markdown}</MarkdownIt>
       </div>
     </div>
