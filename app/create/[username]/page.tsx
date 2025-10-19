@@ -117,7 +117,6 @@ export default function GetStartedPage() {
   const handleUseAI = async () => {
     try {
       setIsGenerating(true);
-      toast.info("Generating your bio with AI...");
 
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -136,7 +135,6 @@ export default function GetStartedPage() {
 
       const data = await response.json();
       setTextareaValue(data.bio);
-      toast.success("Bio generated successfully!");
     } catch (error) {
       console.error("Error generating bio:", error);
       toast.error(
