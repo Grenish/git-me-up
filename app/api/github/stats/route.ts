@@ -1,8 +1,9 @@
-// app/api/github/stats/route.ts
 import { NextRequest } from "next/server";
 import satori from "satori";
 import fs from "fs";
 import path from "path";
+import { generateStatsCard } from "@/components/stats/github-stats";
+import { generateStreakCard } from "@/components/stats/github-streak";
 
 export const runtime = "nodejs";
 
@@ -22,12 +23,19 @@ interface GitHubRepo {
   stargazers_count: number;
 }
 
-interface GitHubEvent {
-  created_at: string;
+interface ContributionDay {
+  contributionCount: number;
+  date: string;
+}
+
+interface ContributionCalendar {
+  totalContributions: number;
+  weeks: Array<{
+    contributionDays: ContributionDay[];
+  }>;
 }
 
 // -------------------- Font loading --------------------
-// Use local fonts from public/fonts directory
 function getFonts(fontType: "montserrat" | "doto" = "montserrat") {
   const fontFileName =
     fontType === "doto" ? "Doto-SemiBold.ttf" : "Montserrat-Regular.ttf";
@@ -43,7 +51,6 @@ function getFonts(fontType: "montserrat" | "doto" = "montserrat") {
       weight: 400 as const,
       style: "normal" as const,
     },
-    // Use same font for bold weight (will be rendered bold by Satori)
     {
       name: fontFamily,
       data: new Uint8Array(fontData).buffer,
@@ -101,536 +108,206 @@ async function fetchGitHubStats(username: string): Promise<GitHubStats> {
 
 async function calculateStreak(username: string): Promise<StreakData> {
   const headers: Record<string, string> = {
-    Accept: "application/vnd.github+json",
+    "Content-Type": "application/json",
     "User-Agent": "minimal-github-stats-card",
   };
 
   if (process.env.GITHUB_TOKEN) {
-    headers.Authorization = `token ${process.env.GITHUB_TOKEN}`;
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   }
 
   try {
-    const eventsResponse = await fetch(
-      `https://api.github.com/users/${username}/events/public?per_page=100`,
-      { headers, next: { revalidate: 3600 } },
-    );
+    // First, get the user's account creation date
+    const userQuery = `
+      query($username: String!) {
+        user(login: $username) {
+          createdAt
+        }
+      }
+    `;
 
-    if (!eventsResponse.ok) {
+    const userResponse = await fetch("https://api.github.com/graphql", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: userQuery,
+        variables: { username },
+      }),
+      next: { revalidate: 3600 },
+    });
+
+    if (!userResponse.ok) {
+      throw new Error(`GitHub GraphQL API error: ${userResponse.status}`);
+    }
+
+    const userData = await userResponse.json();
+    if (userData.errors) {
+      console.error("GraphQL errors:", userData.errors);
       return { currentStreak: 0, longestStreak: 0, totalContributions: 0 };
     }
 
-    const events: GitHubEvent[] = await eventsResponse.json();
+    const createdAt = new Date(userData.data.user.createdAt);
+    const currentDate = new Date();
 
-    // Group events by date (UTC day)
-    const contributionsByDate = new Map<string, number>();
-    for (const event of events) {
-      const date = new Date(event.created_at).toISOString().split("T")[0];
-      contributionsByDate.set(date, (contributionsByDate.get(date) || 0) + 1);
-    }
+    // Query contributions year by year from account creation to now
+    const allContributionDays: ContributionDay[] = [];
+    let totalContributions = 0;
 
-    const dates = Array.from(contributionsByDate.keys()).sort();
-    if (dates.length === 0) {
-      return { currentStreak: 0, longestStreak: 0, totalContributions: 0 };
-    }
+    // Calculate years to query
+    const startYear = createdAt.getFullYear();
+    const currentYear = currentDate.getFullYear();
 
-    const hasDate = (dateStr: string) => contributionsByDate.has(dateStr);
-    const toISODate = (d: Date) => d.toISOString().split("T")[0];
+    for (let year = startYear; year <= currentYear; year++) {
+      const fromDate =
+        year === startYear
+          ? createdAt.toISOString()
+          : `${year}-01-01T00:00:00Z`;
 
-    // Current streak: walk backwards from today/yesterday
-    let currentStreak = 0;
-    const today = new Date();
-    const yesterday = new Date(Date.now() - 86400000);
+      const toDate =
+        year === currentYear
+          ? currentDate.toISOString()
+          : `${year}-12-31T23:59:59Z`;
 
-    const cursor: Date | null = hasDate(toISODate(today))
-      ? new Date(today)
-      : hasDate(toISODate(yesterday))
-        ? new Date(yesterday)
-        : null;
+      const query = `
+        query($username: String!, $from: DateTime!, $to: DateTime!) {
+          user(login: $username) {
+            contributionsCollection(from: $from, to: $to) {
+              contributionCalendar {
+                totalContributions
+                weeks {
+                  contributionDays {
+                    contributionCount
+                    date
+                  }
+                }
+              }
+            }
+          }
+        }
+      `;
 
-    if (cursor) {
-      currentStreak = 1;
-      let currentCursor: Date | null = cursor;
-      while (currentCursor) {
-        const prevDate: Date = new Date(currentCursor.getTime() - 86400000);
-        if (hasDate(toISODate(prevDate))) {
-          currentStreak++;
-          currentCursor = prevDate;
-        } else {
-          break;
+      const response = await fetch("https://api.github.com/graphql", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          query,
+          variables: {
+            username,
+            from: fromDate,
+            to: toDate,
+          },
+        }),
+        next: { revalidate: 3600 },
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to fetch year ${year}`);
+        continue;
+      }
+
+      const data = await response.json();
+      if (data.errors) {
+        console.error("GraphQL errors:", data.errors);
+        continue;
+      }
+
+      const calendar: ContributionCalendar =
+        data.data.user.contributionsCollection.contributionCalendar;
+
+      totalContributions += calendar.totalContributions;
+
+      // Extract contribution days
+      for (const week of calendar.weeks) {
+        for (const day of week.contributionDays) {
+          if (day.contributionCount > 0) {
+            allContributionDays.push(day);
+          }
         }
       }
     }
 
-    // Longest streak across sorted dates
-    let longestStreak = 1;
-    let temp = 1;
-    for (let i = 1; i < dates.length; i++) {
-      const prevDate = new Date(dates[i - 1]);
-      const currDate = new Date(dates[i]);
-      const diffDays = Math.floor(
-        (currDate.getTime() - prevDate.getTime()) / 86400000,
-      );
-      if (diffDays === 1) {
-        temp++;
-      } else {
-        if (temp > longestStreak) longestStreak = temp;
-        temp = 1;
-      }
+    if (allContributionDays.length === 0) {
+      return { currentStreak: 0, longestStreak: 0, totalContributions: 0 };
     }
-    longestStreak = Math.max(longestStreak, temp, currentStreak);
 
-    const totalContributions = Array.from(contributionsByDate.values()).reduce(
-      (a, b) => a + b,
-      0,
+    // Sort by date
+    allContributionDays.sort((a, b) => a.date.localeCompare(b.date));
+
+    // Helper function to get date string
+    const getDateString = (date: Date): string => {
+      return date.toISOString().split("T")[0];
+    };
+
+    // Calculate current streak
+    let currentStreak = 0;
+    const now = new Date();
+    const todayStr = getDateString(now);
+    const yesterdayStr = getDateString(
+      new Date(now.getTime() - 24 * 60 * 60 * 1000),
     );
 
-    return { currentStreak, longestStreak, totalContributions };
+    // Create a set of contribution dates for easy lookup
+    const contributionDates = new Set(
+      allContributionDays.map((day) => day.date),
+    );
+
+    // Check if there's activity today or yesterday to start counting
+    if (contributionDates.has(todayStr)) {
+      currentStreak = 1;
+      const checkDate = new Date(now);
+      checkDate.setDate(checkDate.getDate() - 1);
+
+      // Walk backwards from yesterday
+      while (contributionDates.has(getDateString(checkDate))) {
+        currentStreak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+    } else if (contributionDates.has(yesterdayStr)) {
+      currentStreak = 1;
+      const checkDate = new Date(now);
+      checkDate.setDate(checkDate.getDate() - 2);
+
+      // Walk backwards from 2 days ago
+      while (contributionDates.has(getDateString(checkDate))) {
+        currentStreak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+    }
+
+    // Calculate longest streak
+    let longestStreak = 0;
+    let tempStreak = 1;
+
+    for (let i = 1; i < allContributionDays.length; i++) {
+      const prevDate = new Date(allContributionDays[i - 1].date);
+      const currDate = new Date(allContributionDays[i].date);
+
+      // Calculate difference in days
+      const diffTime = currDate.getTime() - prevDate.getTime();
+      const diffDays = Math.round(diffTime / (24 * 60 * 60 * 1000));
+
+      if (diffDays === 1) {
+        // Consecutive day
+        tempStreak++;
+        longestStreak = Math.max(longestStreak, tempStreak);
+      } else {
+        // Streak broken
+        tempStreak = 1;
+      }
+    }
+
+    // Make sure to check the final streak and current streak
+    longestStreak = Math.max(longestStreak, tempStreak, currentStreak);
+
+    return {
+      currentStreak,
+      longestStreak,
+      totalContributions,
+    };
   } catch (error) {
     console.error("Error calculating streak:", error);
     return { currentStreak: 0, longestStreak: 0, totalContributions: 0 };
   }
-}
-
-// -------------------- Design helpers --------------------
-function themeTokens(theme: "dark" | "light") {
-  const isDark = theme === "dark";
-  return {
-    bg: isDark ? "#0D1117" : "#FFFFFF",
-    text: isDark ? "#E6EDF3" : "#0A0A0A",
-    muted: isDark ? "#9BA5B1" : "#6B7280",
-    border: isDark ? "#1F232A" : "#E5E7EB",
-    accent: isDark ? "#7AA2F7" : "#2563EB",
-    subtle: isDark ? "#11161C" : "#F8FAFC",
-  };
-}
-
-function number(n: number) {
-  try {
-    return n.toLocaleString();
-  } catch {
-    return String(n);
-  }
-}
-
-// -------------------- Card generators (minimal design) --------------------
-function generateStatsCard(
-  username: string,
-  stats: GitHubStats,
-  theme: "dark" | "light" = "dark",
-  fontFamily: string = "Montserrat",
-) {
-  const t = themeTokens(theme);
-
-  const starsStr = number(stats.totalStars);
-  const reposStr = number(stats.publicRepos);
-
-  return {
-    type: "div",
-    props: {
-      style: {
-        width: "495px",
-        height: "195px",
-        backgroundColor: t.bg,
-        border: `1px solid ${t.border}`,
-        borderRadius: "12px",
-        padding: "16px 20px",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: `${fontFamily}, -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif`,
-      },
-      children: [
-        // Header
-        {
-          type: "div",
-          props: {
-            style: {
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "14px",
-            },
-            children: [
-              {
-                type: "div",
-                props: {
-                  style: {
-                    color: t.text,
-                    fontSize: "16px",
-                    fontWeight: 700,
-                    letterSpacing: "0.2px",
-                  },
-                  children: `${username}`,
-                },
-              },
-              {
-                type: "div",
-                props: {
-                  style: {
-                    color: t.muted,
-                    fontSize: "12px",
-                    padding: "2px 8px",
-                    borderRadius: "9999px",
-                    backgroundColor: t.subtle,
-                    border: `1px solid ${t.border}`,
-                  },
-                  children: "GitHub Stats",
-                },
-              },
-            ],
-          },
-        },
-
-        // Divider
-        {
-          type: "div",
-          props: {
-            style: {
-              height: "1px",
-              backgroundColor: t.border,
-              marginBottom: "12px",
-            },
-          },
-        },
-
-        // Metrics Row
-        {
-          type: "div",
-          props: {
-            style: {
-              display: "flex",
-              gap: "24px",
-              flex: 1,
-              alignItems: "center",
-            },
-            children: [
-              // Stars
-              {
-                type: "div",
-                props: {
-                  style: {
-                    display: "flex",
-                    flexDirection: "column",
-                  },
-                  children: [
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.muted,
-                          fontSize: "12px",
-                          marginBottom: "6px",
-                        },
-                        children: "Total Stars",
-                      },
-                    },
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.accent,
-                          fontSize: "28px",
-                          fontWeight: 700,
-                          lineHeight: "1.1",
-                        },
-                        children: starsStr,
-                      },
-                    },
-                  ],
-                },
-              },
-
-              // Subtle vertical divider
-              {
-                type: "div",
-                props: {
-                  style: {
-                    width: "1px",
-                    height: "48px",
-                    backgroundColor: t.border,
-                  },
-                },
-              },
-
-              // Public Repos
-              {
-                type: "div",
-                props: {
-                  style: {
-                    display: "flex",
-                    flexDirection: "column",
-                  },
-                  children: [
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.muted,
-                          fontSize: "12px",
-                          marginBottom: "6px",
-                        },
-                        children: "Public Repositories",
-                      },
-                    },
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.text,
-                          fontSize: "28px",
-                          fontWeight: 700,
-                          lineHeight: "1.1",
-                        },
-                        children: reposStr,
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-
-        // Footer (muted, optional)
-        {
-          type: "div",
-          props: {
-            style: {
-              marginTop: "auto",
-              color: t.muted,
-              fontSize: "11px",
-            },
-            children: "Data via GitHub API • Cached 1h",
-          },
-        },
-      ],
-    },
-  };
-}
-
-function generateStreakCard(
-  username: string,
-  streak: StreakData,
-  theme: "dark" | "light" = "dark",
-  fontFamily: string = "Montserrat",
-) {
-  const t = themeTokens(theme);
-
-  const currentStr = number(streak.currentStreak);
-  const longestStr = number(streak.longestStreak);
-  const totalStr = number(streak.totalContributions);
-
-  return {
-    type: "div",
-    props: {
-      style: {
-        width: "495px",
-        height: "195px",
-        backgroundColor: t.bg,
-        border: `1px solid ${t.border}`,
-        borderRadius: "12px",
-        padding: "16px 20px",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: `${fontFamily}, -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif`,
-      },
-      children: [
-        // Header
-        {
-          type: "div",
-          props: {
-            style: {
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "14px",
-            },
-            children: [
-              {
-                type: "div",
-                props: {
-                  style: {
-                    color: t.text,
-                    fontSize: "16px",
-                    fontWeight: 700,
-                    letterSpacing: "0.2px",
-                  },
-                  children: `${username}`,
-                },
-              },
-              {
-                type: "div",
-                props: {
-                  style: {
-                    color: t.muted,
-                    fontSize: "12px",
-                    padding: "2px 8px",
-                    borderRadius: "9999px",
-                    backgroundColor: t.subtle,
-                    border: `1px solid ${t.border}`,
-                  },
-                  children: "Contribution Streak",
-                },
-              },
-            ],
-          },
-        },
-
-        // Divider
-        {
-          type: "div",
-          props: {
-            style: {
-              height: "1px",
-              backgroundColor: t.border,
-              marginBottom: "12px",
-            },
-          },
-        },
-
-        // Metrics Row
-        {
-          type: "div",
-          props: {
-            style: {
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flex: 1,
-            },
-            children: [
-              // Current
-              {
-                type: "div",
-                props: {
-                  style: { display: "flex", flexDirection: "column" },
-                  children: [
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.muted,
-                          fontSize: "12px",
-                          marginBottom: "6px",
-                        },
-                        children: "Current Streak",
-                      },
-                    },
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.text,
-                          fontSize: "28px",
-                          fontWeight: 700,
-                          lineHeight: "1.1",
-                        },
-                        children: `${currentStr} days`,
-                      },
-                    },
-                  ],
-                },
-              },
-              // Divider
-              {
-                type: "div",
-                props: {
-                  style: {
-                    width: "1px",
-                    height: "48px",
-                    backgroundColor: t.border,
-                  },
-                },
-              },
-              // Longest
-              {
-                type: "div",
-                props: {
-                  style: { display: "flex", flexDirection: "column" },
-                  children: [
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.muted,
-                          fontSize: "12px",
-                          marginBottom: "6px",
-                        },
-                        children: "Longest Streak",
-                      },
-                    },
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.accent,
-                          fontSize: "28px",
-                          fontWeight: 700,
-                          lineHeight: "1.1",
-                        },
-                        children: `${longestStr} days`,
-                      },
-                    },
-                  ],
-                },
-              },
-              // Divider
-              {
-                type: "div",
-                props: {
-                  style: {
-                    width: "1px",
-                    height: "48px",
-                    backgroundColor: t.border,
-                  },
-                },
-              },
-              // Total
-              {
-                type: "div",
-                props: {
-                  style: { display: "flex", flexDirection: "column" },
-                  children: [
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.muted,
-                          fontSize: "12px",
-                          marginBottom: "6px",
-                        },
-                        children: "Total Contributions",
-                      },
-                    },
-                    {
-                      type: "div",
-                      props: {
-                        style: {
-                          color: t.text,
-                          fontSize: "28px",
-                          fontWeight: 700,
-                          lineHeight: "1.1",
-                        },
-                        children: totalStr,
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-
-        // Footer (muted, optional)
-        {
-          type: "div",
-          props: {
-            style: { marginTop: "auto", color: t.muted, fontSize: "11px" },
-            children: "Based on recent public events • Cached 1h",
-          },
-        },
-      ],
-    },
-  };
 }
 
 // -------------------- Route --------------------
@@ -639,7 +316,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const username = searchParams.get("username");
     const theme = (searchParams.get("theme") as "dark" | "light") || "dark";
-    const type = searchParams.get("type") || "stats"; // 'stats' or 'streak'
+    const type = searchParams.get("type") || "stats";
     const font =
       (searchParams.get("font") as "montserrat" | "doto") || "montserrat";
 
