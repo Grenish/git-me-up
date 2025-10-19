@@ -49,7 +49,7 @@ export function generateStreakCard(
     type: "div",
     props: {
       style: {
-        width: "320px",
+        width: "495px",
         backgroundColor: t.bg,
         border: `1px solid ${t.border}`,
         borderRadius: "12px",

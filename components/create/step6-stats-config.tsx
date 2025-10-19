@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Toggle } from "@/components/ui/toggle";
+import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -42,8 +42,7 @@ export function Step6StatsConfig({
     streak: false,
   });
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
 
   const statsUrl = `${baseUrl}/api/github/stats?username=${username}&theme=${statsConfig.theme}&type=stats`;
   const streakUrl = `${baseUrl}/api/github/stats?username=${username}&theme=${statsConfig.theme}&type=streak`;
@@ -54,7 +53,6 @@ export function Step6StatsConfig({
 
   const handleThemeChange = (theme: "dark" | "light") => {
     onStatsConfigChange({ ...statsConfig, theme });
-    // Reset image errors when theme changes
     setImageErrors({ stats: false, streak: false });
   };
 
@@ -74,141 +72,150 @@ export function Step6StatsConfig({
 
   return (
     <div className="flex w-full flex-col items-center justify-center">
-      <div className="w-11/12 md:w-1/2 flex items-center justify-between">
+      {/* Header */}
+      <div className="w-11/12 md:w-2/3 lg:w-1/2 flex items-center justify-between mb-6">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant={"ghost"} size={"icon-sm"} onClick={onPrev}>
-              <ArrowLeft />
+            <Button variant="ghost" size="icon-sm" onClick={onPrev}>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Go Back</TooltipContent>
+          <TooltipContent>Back</TooltipContent>
         </Tooltip>
-        <h2 className="text-2xl font-semibold">GitHub Stats</h2>
+        <h2 className="text-xl font-semibold">GitHub Stats</h2>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant={"ghost"} size={"icon-sm"} onClick={onNext}>
-              <ArrowRight />
+            <Button variant="ghost" size="icon-sm" onClick={onNext}>
+              <ArrowRight className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Next Step</TooltipContent>
+          <TooltipContent>Next</TooltipContent>
         </Tooltip>
       </div>
 
-      <div className="w-11/12 md:w-1/2 mt-8 space-y-8">
-        {/* Font Selection */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Font Style</Label>
-          <div className="flex gap-3">
-            <Button
-              variant={statsConfig.font === "montserrat" ? "default" : "outline"}
-              size={"sm"}
-              onClick={() => handleFontChange("montserrat")}
-              className="flex-1"
-            >
-              Montserrat
-            </Button>
-            <Button
-              variant={statsConfig.font === "doto" ? "default" : "outline"}
-              size={"sm"}
-              onClick={() => handleFontChange("doto")}
-              className="flex-1"
-            >
-              Doto Rounded
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Choose your preferred font for the stats cards
-          </p>
-        </div>
+      <div className="w-11/12 md:w-2/3 lg:w-1/2 space-y-5">
+        {/* Configuration Panel */}
+        <div className="rounded-xl border bg-card p-5 space-y-5">
+          {/* Font & Theme Row */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Font Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Font
+              </Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={
+                    statsConfig.font === "montserrat" ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => handleFontChange("montserrat")}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Montserrat
+                </Button>
+                <Button
+                  variant={statsConfig.font === "doto" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleFontChange("doto")}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Doto
+                </Button>
+              </div>
+            </div>
 
-        {/* Theme Selection */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Theme</Label>
-          <div className="flex gap-3">
-            <Button
-              variant={statsConfig.theme === "dark" ? "default" : "outline"}
-              size={"sm"}
-              onClick={() => handleThemeChange("dark")}
-              className="flex-1"
-            >
-              🌙 Dark
-            </Button>
-            <Button
-              variant={statsConfig.theme === "light" ? "default" : "outline"}
-              size={"sm"}
-              onClick={() => handleThemeChange("light")}
-              className="flex-1"
-            >
-              ☀️ Light
-            </Button>
+            {/* Theme Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Theme
+              </Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={statsConfig.theme === "dark" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleThemeChange("dark")}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Dark
+                </Button>
+                <Button
+                  variant={
+                    statsConfig.theme === "light" ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => handleThemeChange("light")}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Light
+                </Button>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Select the color scheme for your stats cards
-          </p>
-        </div>
 
-        {/* Stats Cards Selection */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Cards to Include</Label>
+          {/* Divider */}
+          <div className="h-px bg-border" />
+
+          {/* Cards Selection */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div className="flex-1">
-                <p className="text-sm font-medium">Stats Card</p>
-                <p className="text-xs text-muted-foreground">
-                  Shows total stars and public repositories
-                </p>
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Include Cards
+            </Label>
+            <div className="space-y-2">
+              {/* Stats Card */}
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div>
+                  <p className="text-sm font-medium">Stats</p>
+                  <p className="text-xs text-muted-foreground">Stars & repos</p>
+                </div>
+                <Switch
+                  checked={statsConfig.includeStats}
+                  onCheckedChange={handleStatsToggle}
+                />
               </div>
-              <Toggle
-                pressed={statsConfig.includeStats}
-                onPressedChange={handleStatsToggle}
-                aria-label="Toggle stats card"
-              >
-                {statsConfig.includeStats ? "Included" : "Excluded"}
-              </Toggle>
+
+              {/* Streak Card */}
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div>
+                  <p className="text-sm font-medium">Streak</p>
+                  <p className="text-xs text-muted-foreground">
+                    Contribution streaks
+                  </p>
+                </div>
+                <Switch
+                  checked={statsConfig.includeStreak}
+                  onCheckedChange={handleStreakToggle}
+                />
+              </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div className="flex-1">
-                <p className="text-sm font-medium">Streak Card</p>
-                <p className="text-xs text-muted-foreground">
-                  Displays contribution streaks and totals
-                </p>
-              </div>
-              <Toggle
-                pressed={statsConfig.includeStreak}
-                onPressedChange={handleStreakToggle}
-                aria-label="Toggle streak card"
-              >
-                {statsConfig.includeStreak ? "Included" : "Excluded"}
-              </Toggle>
-            </div>
+            {!statsConfig.includeStats && !statsConfig.includeStreak && (
+              <p className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1 mt-2">
+                <span>⚠️</span>
+                <span>Select at least one card</span>
+              </p>
+            )}
           </div>
-          {!statsConfig.includeStats && !statsConfig.includeStreak && (
-            <p className="text-xs text-amber-600 dark:text-amber-500">
-              ⚠️ At least one card should be selected for better profile visibility
-            </p>
-          )}
         </div>
 
-        {/* Live Preview */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Live Preview</Label>
-          <div className="space-y-4 p-4 rounded-lg border bg-muted/50">
-            {statsConfig.includeStats && (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground font-medium">
-                  Stats Card
-                </p>
-                <div className="relative w-full max-w-[495px] mx-auto">
+        {/* Preview Section */}
+        {(statsConfig.includeStats || statsConfig.includeStreak) && (
+          <div className="space-y-3">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Preview
+            </Label>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              {/* Stats Card Preview */}
+              {statsConfig.includeStats && (
+                <div className="relative">
                   {!imageErrors.stats ? (
                     <>
-                      <div className="w-full h-[195px] rounded-lg animate-pulse bg-muted absolute" />
                       <Image
                         src={statsUrl}
                         alt={`${username}'s GitHub Stats`}
                         width={495}
                         height={195}
-                        className="w-full h-auto rounded-lg relative z-10"
+                        className="w-auto h-auto max-w-full rounded-xl relative z-10 shadow-sm"
                         onError={() =>
                           setImageErrors((prev) => ({ ...prev, stats: true }))
                         }
@@ -217,59 +224,48 @@ export function Step6StatsConfig({
                       />
                     </>
                   ) : (
-                    <div className="w-full h-[195px] rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/30">
-                      <p className="text-sm text-muted-foreground">
-                        Failed to load preview
+                    <div className="w-[495px] h-[195px] max-w-full rounded-xl border-2 border-dashed flex items-center justify-center bg-muted/20">
+                      <p className="text-xs text-muted-foreground">
+                        Preview unavailable
                       </p>
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              )}
 
-            {statsConfig.includeStreak && (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground font-medium">
-                  Streak Card
-                </p>
-                <div className="relative w-full max-w-[495px] mx-auto">
+              {/* Streak Card Preview */}
+              {statsConfig.includeStreak && (
+                <div className="relative">
                   {!imageErrors.streak ? (
                     <>
-                      <div className="w-full h-[195px] rounded-lg animate-pulse bg-muted absolute" />
                       <Image
                         src={streakUrl}
                         alt={`${username}'s GitHub Streak`}
                         width={495}
                         height={195}
-                        className="w-full h-auto rounded-lg relative z-10"
+                        className="w-auto h-auto max-w-full rounded-xl relative z-10 shadow-sm"
                         onError={() =>
-                          setImageErrors((prev) => ({ ...prev, streak: true }))
+                          setImageErrors((prev) => ({
+                            ...prev,
+                            streak: true,
+                          }))
                         }
                         unoptimized
                         key={streakUrl}
                       />
                     </>
                   ) : (
-                    <div className="w-full h-[195px] rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/30">
-                      <p className="text-sm text-muted-foreground">
-                        Failed to load preview
+                    <div className="w-[495px] h-[195px] max-w-full rounded-xl border-2 border-dashed flex items-center justify-center bg-muted/20">
+                      <p className="text-xs text-muted-foreground">
+                        Preview unavailable
                       </p>
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {!statsConfig.includeStats && !statsConfig.includeStreak && (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground">
-                  No cards selected. Toggle at least one card above to see the
-                  preview.
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
