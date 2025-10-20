@@ -27,6 +27,7 @@ export default function CardTestPage() {
   const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
   const statsUrl = `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=stats&font=${font}&t=${refreshKey}`;
   const streakUrl = `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=streak&font=${font}&t=${refreshKey}`;
+  const topLangUrl = `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=top-lang&font=${font}&t=${refreshKey}`;
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -40,20 +41,24 @@ export default function CardTestPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const getMarkdown = (type: "stats" | "streak") => {
+  const getMarkdown = (type: "stats" | "streak" | "top-lang") => {
     const url =
       type === "stats"
         ? `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=stats&font=${font}`
-        : `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=streak&font=${font}`;
-    return `![GitHub ${type === "stats" ? "Stats" : "Streak"}](${url})`;
+        : type === "streak"
+          ? `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=streak&font=${font}`
+          : `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=top-lang&font=${font}`;
+    return `![GitHub ${type === "stats" ? "Stats" : type === "streak" ? "Streak" : "Top Languages"}](${url})`;
   };
 
-  const getHTML = (type: "stats" | "streak") => {
+  const getHTML = (type: "stats" | "streak" | "top-lang") => {
     const url =
       type === "stats"
         ? `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=stats&font=${font}`
-        : `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=streak&font=${font}`;
-    return `<img src="${url}" alt="GitHub ${type === "stats" ? "Stats" : "Streak"}" />`;
+        : type === "streak"
+          ? `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=streak&font=${font}`
+          : `${baseUrl}/api/github/stats?username=${username}&theme=${theme}&type=top-lang&font=${font}`;
+    return `<img src="${url}" alt="GitHub ${type === "stats" ? "Stats" : type === "streak" ? "Streak" : "Top Languages"}" />`;
   };
 
   return (
@@ -138,9 +143,10 @@ export default function CardTestPage() {
 
         {/* Preview Tabs */}
         <Tabs defaultValue="stats" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="stats">Stats Card</TabsTrigger>
             <TabsTrigger value="streak">Streak Card</TabsTrigger>
+            <TabsTrigger value="top-lang">Top Languages</TabsTrigger>
           </TabsList>
 
           <TabsContent value="stats" className="space-y-6">
@@ -229,7 +235,7 @@ export default function CardTestPage() {
                           onClick={() =>
                             copyToClipboard(
                               statsUrl.replace(/&t=\d+/, ""),
-                              "stats-url"
+                              "stats-url",
                             )
                           }
                         >
@@ -245,7 +251,7 @@ export default function CardTestPage() {
                           onClick={() =>
                             window.open(
                               statsUrl.replace(/&t=\d+/, ""),
-                              "_blank"
+                              "_blank",
                             )
                           }
                         >
@@ -348,7 +354,7 @@ export default function CardTestPage() {
                           onClick={() =>
                             copyToClipboard(
                               streakUrl.replace(/&t=\d+/, ""),
-                              "streak-url"
+                              "streak-url",
                             )
                           }
                         >
@@ -364,7 +370,7 @@ export default function CardTestPage() {
                           onClick={() =>
                             window.open(
                               streakUrl.replace(/&t=\d+/, ""),
-                              "_blank"
+                              "_blank",
                             )
                           }
                         >
@@ -374,6 +380,128 @@ export default function CardTestPage() {
                     </div>
                     <code className="block p-3 bg-muted rounded text-sm overflow-x-auto break-all">
                       {streakUrl.replace(/&t=\d+/, "")}
+                    </code>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="top-lang" className="space-y-6">
+            {/* Top Languages Card Preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Languages Card Preview</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div
+                  className={`flex items-center justify-center p-8 rounded-lg ${
+                    theme === "dark" ? "bg-[#0D1117]" : "bg-white"
+                  }`}
+                >
+                  <div className="relative">
+                    {isLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-lg">
+                        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    )}
+                    <Image
+                      src={topLangUrl}
+                      alt="GitHub Top Languages"
+                      width={495}
+                      height={195}
+                      className="rounded-lg"
+                      unoptimized
+                      key={topLangUrl}
+                    />
+                  </div>
+                </div>
+
+                {/* Code Examples */}
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Markdown</Label>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          copyToClipboard(
+                            getMarkdown("top-lang"),
+                            "top-lang-md",
+                          )
+                        }
+                      >
+                        {copied === "top-lang-md" ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <code className="block p-3 bg-muted rounded text-sm overflow-x-auto">
+                      {getMarkdown("top-lang")}
+                    </code>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>HTML</Label>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          copyToClipboard(getHTML("top-lang"), "top-lang-html")
+                        }
+                      >
+                        {copied === "top-lang-html" ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <code className="block p-3 bg-muted rounded text-sm overflow-x-auto">
+                      {getHTML("top-lang")}
+                    </code>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Direct URL</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            copyToClipboard(
+                              topLangUrl.replace(/&t=\d+/, ""),
+                              "top-lang-url",
+                            )
+                          }
+                        >
+                          {copied === "top-lang-url" ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            window.open(
+                              topLangUrl.replace(/&t=\d+/, ""),
+                              "_blank",
+                            )
+                          }
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <code className="block p-3 bg-muted rounded text-sm overflow-x-auto break-all">
+                      {topLangUrl.replace(/&t=\d+/, "")}
                     </code>
                   </div>
                 </div>
@@ -410,9 +538,7 @@ export default function CardTestPage() {
               <li>
                 Open the direct URL in a new tab to see the raw SVG output
               </li>
-              <li>
-                Check the browser console for any API errors or warnings
-              </li>
+              <li>Check the browser console for any API errors or warnings</li>
             </ul>
           </CardContent>
         </Card>
