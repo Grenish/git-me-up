@@ -50,6 +50,7 @@ export default function GetStartedPage() {
     theme: "dark",
     includeStats: true,
     includeStreak: true,
+    includeTopLang: false,
   });
 
   // UI states
@@ -203,6 +204,7 @@ export default function GetStartedPage() {
       theme: "dark",
       includeStats: true,
       includeStreak: true,
+      includeTopLang: false,
     });
     setCurrentStep(1);
     setDirection(-1);
