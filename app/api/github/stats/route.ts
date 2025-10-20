@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { generateStatsCard } from "@/components/stats/github-stats";
 import { generateStreakCard } from "@/components/stats/github-streak";
+import { generateTopLangCard } from "@/components/stats/github-top-lang";
 
 export const runtime = "nodejs";
 
@@ -33,6 +34,13 @@ interface ContributionCalendar {
   weeks: Array<{
     contributionDays: ContributionDay[];
   }>;
+}
+
+interface LanguageData {
+  name: string;
+  percentage: number;
+  color: string;
+  logoUrl: string;
 }
 
 // -------------------- Font loading --------------------
@@ -310,6 +318,112 @@ async function calculateStreak(username: string): Promise<StreakData> {
   }
 }
 
+async function fetchTopLanguages(username: string): Promise<LanguageData[]> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "User-Agent": "minimal-github-stats-card",
+  };
+
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  try {
+    const query = `
+      query($username: String!) {
+        user(login: $username) {
+          repositories(first: 100, ownerAffiliations: OWNER, orderBy: {field: UPDATED_AT, direction: DESC}) {
+            edges {
+              node {
+                name
+                isFork
+                languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
+                  edges {
+                    size
+                    node {
+                      name
+                      color
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const response = await fetch("https://api.github.com/graphql", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query,
+        variables: { username },
+      }),
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub GraphQL API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.errors) {
+      console.error("GraphQL errors:", data.errors);
+      return [];
+    }
+
+    // Aggregate language statistics across all repositories
+    const languageStats: Record<string, { size: number; color: string }> = {};
+    let totalSize = 0;
+
+    const repositories = data.data.user.repositories.edges;
+    for (const repo of repositories) {
+      // Skip forked repositories
+      if (repo.node.isFork) {
+        continue;
+      }
+
+      const languages = repo.node.languages.edges;
+      for (const lang of languages) {
+        const langName = lang.node.name;
+        const langSize = lang.size;
+        const langColor = lang.node.color || "#858585";
+
+        if (!languageStats[langName]) {
+          languageStats[langName] = { size: 0, color: langColor };
+        }
+        languageStats[langName].size += langSize;
+        totalSize += langSize;
+      }
+    }
+
+    // Convert to array and calculate percentages
+    const languagesArray: LanguageData[] = Object.entries(languageStats)
+      .map(([name, stats]) => ({
+        name,
+        percentage: (stats.size / totalSize) * 100,
+        color: stats.color,
+        logoUrl: "",
+      }))
+      .sort((a, b) => b.percentage - a.percentage)
+      .slice(0, 3); // Get top 3
+
+    // Add logo URLs dynamically
+    const baseUrl =
+      process.env.NEXT_PUBLIC_URL || "https://git-me-up.vercel.app";
+    for (const lang of languagesArray) {
+      // Construct SVG path: /svg/{LanguageName}.svg
+      lang.logoUrl = `${baseUrl}/svg/${lang.name}.svg`;
+    }
+
+    return languagesArray;
+  } catch (error) {
+    console.error("Error fetching top languages:", error);
+    return [];
+  }
+}
+
 // -------------------- Route --------------------
 export async function GET(request: NextRequest) {
   try {
@@ -337,6 +451,24 @@ export async function GET(request: NextRequest) {
           streak,
           theme,
           fontFamily,
+        ) as unknown as React.ReactElement,
+        {
+          width: 495,
+          height: 195,
+          fonts,
+        },
+      );
+    } else if (type === "top-lang") {
+      const languages = await fetchTopLanguages(username);
+      const baseUrl =
+        process.env.NEXT_PUBLIC_URL || "https://git-me-up.vercel.app";
+      svg = await satori(
+        generateTopLangCard(
+          username,
+          languages,
+          theme,
+          fontFamily,
+          baseUrl,
         ) as unknown as React.ReactElement,
         {
           width: 495,
