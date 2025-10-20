@@ -1352,7 +1352,7 @@ export const TechStack: TechStackItem[] = [
     name: "Jupyter",
     short: "jupyter",
     type: "ai",
-    logoPath: "/svg/Jupyter.svg",
+    logoPath: "/svg/Jupyter Notebook.svg",
   },
   {
     iconName: "matplotlib",
