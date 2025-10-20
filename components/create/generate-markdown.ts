@@ -18,6 +18,7 @@ interface StatsConfig {
   theme: "dark" | "light";
   includeStats: boolean;
   includeStreak: boolean;
+  includeTopLang: boolean;
 }
 
 interface GenerateMarkdownOptions {
@@ -122,7 +123,9 @@ export function generateMarkdown({
   if (
     user &&
     statsConfig &&
-    (statsConfig.includeStats || statsConfig.includeStreak)
+    (statsConfig.includeStats ||
+      statsConfig.includeStreak ||
+      statsConfig.includeTopLang)
   ) {
     const baseUrl =
       process.env.NEXT_PUBLIC_URL || "https://git-me-up.vercel.app";
@@ -140,6 +143,11 @@ export function generateMarkdown({
     if (statsConfig.includeStreak) {
       const streakUrl = `${baseUrl}/api/github/stats?username=${user.login}&theme=${theme}&type=streak&font=${font}`;
       markdown += `![GitHub Streak](${streakUrl})\n\n`;
+    }
+
+    if (statsConfig.includeTopLang) {
+      const topLangUrl = `${baseUrl}/api/github/stats?username=${user.login}&theme=${theme}&type=top-lang&font=${font}`;
+      markdown += `![Top Languages](${topLangUrl})\n\n`;
     }
 
     markdown += `</div>\n\n`;
