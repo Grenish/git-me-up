@@ -17,6 +17,7 @@ export interface StatsConfig {
   theme: "dark" | "light";
   includeStats: boolean;
   includeStreak: boolean;
+  includeTopLang: boolean;
 }
 
 interface Step6StatsConfigProps {
@@ -37,15 +38,18 @@ export function Step6StatsConfig({
   const [imageErrors, setImageErrors] = useState<{
     stats: boolean;
     streak: boolean;
+    topLang: boolean;
   }>({
     stats: false,
     streak: false,
+    topLang: false,
   });
 
   const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
 
   const statsUrl = `${baseUrl}/api/github/stats?username=${username}&theme=${statsConfig.theme}&type=stats`;
   const streakUrl = `${baseUrl}/api/github/stats?username=${username}&theme=${statsConfig.theme}&type=streak`;
+  const topLangUrl = `${baseUrl}/api/github/stats?username=${username}&theme=${statsConfig.theme}&type=top-lang`;
 
   const handleFontChange = (font: "montserrat" | "doto") => {
     onStatsConfigChange({ ...statsConfig, font });
@@ -53,7 +57,7 @@ export function Step6StatsConfig({
 
   const handleThemeChange = (theme: "dark" | "light") => {
     onStatsConfigChange({ ...statsConfig, theme });
-    setImageErrors({ stats: false, streak: false });
+    setImageErrors({ stats: false, streak: false, topLang: false });
   };
 
   const handleStatsToggle = () => {
@@ -67,6 +71,13 @@ export function Step6StatsConfig({
     onStatsConfigChange({
       ...statsConfig,
       includeStreak: !statsConfig.includeStreak,
+    });
+  };
+
+  const handleTopLangToggle = () => {
+    onStatsConfigChange({
+      ...statsConfig,
+      includeTopLang: !statsConfig.includeTopLang,
     });
   };
 
@@ -187,19 +198,37 @@ export function Step6StatsConfig({
                   onCheckedChange={handleStreakToggle}
                 />
               </div>
+
+              {/* Top Languages Card */}
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div>
+                  <p className="text-sm font-medium">Top Languages</p>
+                  <p className="text-xs text-muted-foreground">
+                    Most used languages
+                  </p>
+                </div>
+                <Switch
+                  checked={statsConfig.includeTopLang}
+                  onCheckedChange={handleTopLangToggle}
+                />
+              </div>
             </div>
 
-            {!statsConfig.includeStats && !statsConfig.includeStreak && (
-              <p className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1 mt-2">
-                <span>⚠️</span>
-                <span>Select at least one card</span>
-              </p>
-            )}
+            {!statsConfig.includeStats &&
+              !statsConfig.includeStreak &&
+              !statsConfig.includeTopLang && (
+                <p className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1 mt-2">
+                  <span>⚠️</span>
+                  <span>Select at least one card</span>
+                </p>
+              )}
           </div>
         </div>
 
         {/* Preview Section */}
-        {(statsConfig.includeStats || statsConfig.includeStreak) && (
+        {(statsConfig.includeStats ||
+          statsConfig.includeStreak ||
+          statsConfig.includeTopLang) && (
           <div className="space-y-3">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Preview
@@ -252,6 +281,37 @@ export function Step6StatsConfig({
                         }
                         unoptimized
                         key={streakUrl}
+                      />
+                    </>
+                  ) : (
+                    <div className="w-[495px] h-[195px] max-w-full rounded-xl border-2 border-dashed flex items-center justify-center bg-muted/20">
+                      <p className="text-xs text-muted-foreground">
+                        Preview unavailable
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Top Languages Card Preview */}
+              {statsConfig.includeTopLang && (
+                <div className="relative">
+                  {!imageErrors.topLang ? (
+                    <>
+                      <Image
+                        src={topLangUrl}
+                        alt={`${username}'s Top Languages`}
+                        width={495}
+                        height={195}
+                        className="w-auto h-auto max-w-full rounded-xl relative z-10 shadow-sm"
+                        onError={() =>
+                          setImageErrors((prev) => ({
+                            ...prev,
+                            topLang: true,
+                          }))
+                        }
+                        unoptimized
+                        key={topLangUrl}
                       />
                     </>
                   ) : (
